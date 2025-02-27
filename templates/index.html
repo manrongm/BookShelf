@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookShelf - My Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script>
+        function showBookDetails(title, author, genre, year, rating, review) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-author').innerText = "Author: " + author;
+            document.getElementById('modal-genre').innerText = "Genre: " + genre;
+            document.getElementById('modal-year').innerText = "Year: " + year;
+            document.getElementById('modal-rating').innerText = "Rating: " + rating + "/5";
+            document.getElementById('modal-review').innerText = "Review: " + review;
+            document.getElementById('book-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('book-modal').style.display = 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">My Book Collection</h1>
+
+        <!-- Search Form -->
+        <form action="search.html" method="get" class="search-bar">
+            <input type="text" name="query" placeholder="Search by title, author, or genre" class="search-input">
+            <button type="submit" class="btn search-btn">Search</button>
+        </form>
+
+        <!-- Book List -->
+        <div class="book-grid">
+            {% for book in books %}
+            <div class="book-card">
+                <!-- Clicking the title opens the modal -->
+                <h3 class="book-title" onclick="showBookDetails('{{ book.title }}', '{{ book.author }}', '{{ book.genre }}', '{{ book.year }}', '{{ book.rating }}', '{{ book.review }}')">
+                    {{ book.title }}
+                </h3>
+                <!-- Edit Button Inside the Book Card -->
+                <div class="edit-button-container">
+                    <a href="{{ url_for('edit_book', book_id=book['_id']) }}" class="btn btn-success btn-edit">Edit</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- No Books Message -->
+        {% if books|length == 0 %}
+            <p class="empty-message">No books in your collection yet. Add some now!</p>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="button-container">
+            <a href="{{ url_for('add_book') }}" class="btn btn-success">Add New Book</a>
+        </div>
+    </div>
+
+    <!-- Modal for Book Details -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title"></h2>
+            <p id="modal-author"></p>
+            <p id="modal-genre"></p>
+            <p id="modal-year"></p>
+            <p id="modal-rating"></p>
+            <p id="modal-review"></p>
+        </div>
+    </div>
+</body>
+</html>
