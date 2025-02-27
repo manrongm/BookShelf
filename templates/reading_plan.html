@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Plan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function handlePlanClick(cardElement) {
+            // Retrieve data attributes
+            let planId = cardElement.dataset.planId;
+            let name = cardElement.dataset.planName;
+            let booksJson = cardElement.dataset.books;
+
+            try {
+                let books = JSON.parse(booksJson);
+                console.log("Opening reading plan modal for:", name, books);
+
+                document.getElementById('modal-plan-title').innerText = name;
+
+                let bookList = document.getElementById('modal-book-list');
+                bookList.innerHTML = '';
+
+                let booksRead = 0;
+
+                books.forEach(book => {
+                    let listItem = document.createElement('div');
+                    listItem.className = "book-item";
+
+                    let checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+                    checkbox.checked = book.read;
+                    checkbox.dataset.planId = planId;
+                    checkbox.dataset.bookId = book.book_id;
+                    checkbox.onclick = updateReadingProgress;
+
+                    let label = document.createElement('label');
+                    label.innerText = book.book_id;
+
+                    listItem.appendChild(checkbox);
+                    listItem.appendChild(label);
+                    bookList.appendChild(listItem);
+
+                    if (book.read) booksRead++;
+                });
+
+                updateProgressBar(planId, booksRead, books.length);
+
+                let modal = document.getElementById('reading-plan-modal');
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+            } catch (error) {
+                console.error("Error parsing books JSON:", error);
+            }
+        }
+
+        function updateReadingProgress(event) {
+            let checkbox = event.target;
+            let planId = checkbox.dataset.planId;
+            let bookId = checkbox.dataset.bookId;
+            let isChecked = checkbox.checked;
+
+            fetch(`/update_reading_plan/${planId}`, {
+                method: 'POST',
+                body: new URLSearchParams({ book_id: bookId }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    let books = document.querySelectorAll(`input[data-plan-id="${planId}"]`);
+                    let booksRead = [...books].filter(b => b.checked).length;
+                    updateProgressBar(planId, booksRead, books.length);
+                }
+            });
+        }
+
+        function updateProgressBar(planId, booksRead, totalBooks) {
+            let progressBar = document.getElementById(`progress-bar-${planId}`);
+            let progressText = document.getElementById(`progress-text-${planId}`);
+
+            let progressPercentage = (booksRead / totalBooks) * 100;
+            progressBar.style.width = progressPercentage + '%';
+            progressText.innerText = `${booksRead}/${totalBooks} Books Read`;
+        }
+
+        function closeModal() {
+            document.getElementById('reading-plan-modal').style.display = 'none';
+        }
+
+        function deleteReadingPlan(planId, event) {
+            event.stopPropagation();
+            if (confirm("Are you sure you want to delete this reading plan?")) {
+                fetch(`/delete_reading_plan/${planId}`, {
+                    method: 'POST'
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.querySelector(`button[onclick="deleteReadingPlan('${planId}', event)"]`).closest('.reading-plan-card').remove();
+                    } else {
+                        alert("Failed to delete the reading plan.");
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">My Reading Plans</h1>
+        <div class="reading-plan-container">
+            {% for plan in plans %}
+            <div class="reading-plan-card" 
+                data-plan-id="{{ plan._id }}" 
+                data-plan-name="{{ plan.name }}" 
+                data-books='{{ plan.books | tojson | safe }}'
+                onclick="handlePlanClick(this)">
+                
+                <div class="plan-header">
+                    <h3 class="plan-title">{{ plan.name }}</h3>
+                    <button class="btn btn-danger btn-delete" onclick="deleteReadingPlan('{{ plan._id }}', event)">Delete</button>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar-{{ plan._id }}" style="width: 0%;"></div>
+                </div>
+                <p class="progress-text" id="progress-text-{{ plan._id }}">0/{{ plan.books|length }} Books Read</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="button-container">
+            <a href="{{ url_for('add_reading_plan') }}" class="btn btn-success">Add New Reading Plan</a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="reading-plan-modal" class="reading-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-plan-title"></h2>
+            <div id="modal-book-list" class="modal-book-list"></div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p id="progress-text"></p>
+        </div>
+    </div>
+</body>
+</html>
