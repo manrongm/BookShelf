@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add a New Book</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Link to External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">Add a New Book</h1>
+
+        <!-- Add Book Form -->
+        <form action="{{ url_for('add_book') }}" method="POST" class="book-form">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" placeholder="Enter book title" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" placeholder="Enter author's name" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <input type="text" id="genre" name="genre" placeholder="Enter genre" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="year">Year of Publication</label>
+                <input type="number" id="year" name="year" placeholder="Enter year" min="0" max="2025" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="rating">Rating (Out of 5)</label>
+                <input type="number" id="rating" name="rating" placeholder="Enter rating" min="1" max="5" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="review">Review</label>
+                <textarea id="review" name="review" placeholder="Write your thoughts about the book" rows="4" class="form-control"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success">Save Book</button>
+            <a href="/index.html" class="btn btn-success">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
