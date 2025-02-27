@@ -15,7 +15,6 @@ load_dotenv()
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 connection = pymongo.MongoClient(os.getenv('MONGO'))
-print(os.getenv('MONGO'))
 db = connection['BookReviewProject']
 
 login_manager = LoginManager()
@@ -44,9 +43,9 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
     submit = SubmitField('Register')
 
-    def validate_username(self, username):
+    def validate_username(self, username1):
         user = db.User.find_one({
-            'username': username.data
+            'username': username1.data
         })
 
         if user:
@@ -65,7 +64,8 @@ def home():
 def register():
     form = RegistrationForm()
 
-    if form.validate_on_submit() and form.validate_username(form.username.data):
+    if form.validate_on_submit():
+        form.validate_username(form.username)
         hashed_password = Bcrypt().generate_password_hash(form.password.data)
 
         user = {
@@ -76,7 +76,6 @@ def register():
 
         db.User.insert_one(user)
         return redirect(url_for('home'))
-
     return render_template('registration.html', form=form)
 #24:38
 @app.route('/login', methods=['GET', 'POST'])
@@ -84,16 +83,12 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        print("HELLO HELLO")
         user = db.User.find_one({
             'username': form.username.data
         })
         
         if user and Bcrypt().check_password_hash(user['password'], form.password.data):
-            print(f'User {user["username"]} logged in')
-            print(user)
-            what = login_user(User(user))
-            print(what)
+            login_user(User(user))
             return redirect(url_for('home'))
         else:
             flash('Invalid username or password', 'danger')
