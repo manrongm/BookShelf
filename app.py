@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 import os
 import pymongo
 from bson.objectid import ObjectId
@@ -16,7 +16,8 @@ load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 connection = pymongo.MongoClient(os.getenv('MONGO'))
 db = connection['BookReviewProject']
-
+books_collection = db['books']
+reading_plans_collection = db['reading_plans']
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -58,7 +59,102 @@ class LoginForm(FlaskForm):
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    books = list(books_collection.find())
+    print(books)
+    return render_template('index.html', books = books)
+
+@app.route('/add_book', methods=['GET', 'POST'])
+def add_book():
+    if request.method == 'POST':
+        # Retrieve form data
+        title = request.form.get('title')
+        author = request.form.get('author')
+        genre = request.form.get('genre')
+        year = request.form.get('year')
+        rating = request.form.get('rating')
+        review = request.form.get('review')
+
+        # Insert book data into MongoDB
+        book_data = {
+            'title': title,
+            'author': author,
+            'genre': genre,
+            'year': year,
+            'rating': rating,
+            'review': review
+        }
+
+        books_collection.insert_one(book_data)
+        flash('Book added successfully!', 'success')
+
+        return redirect(url_for('home'))
+
+    return render_template('add_book.html')
+
+@app.route('/edit_book/<book_id>', methods=['GET', 'POST'])
+def edit_book(book_id):
+    book = books_collection.find_one({'_id': ObjectId(book_id)})
+    
+    if request.method == 'POST':
+        updated_data = {
+            'title': request.form.get('title'),
+            'author': request.form.get('author'),
+            'genre': request.form.get('genre'),
+            'year': request.form.get('year'),
+            'rating': request.form.get('rating'),
+            'review': request.form.get('review')
+        }
+        books_collection.update_one({'_id': ObjectId(book_id)}, {'$set': updated_data})
+        flash('Book updated successfully!', 'success')
+        return redirect(url_for('home'))
+    
+    return render_template('edit_book.html', book=book)
+
+@app.route('/reading_plans')
+def reading_plans():
+    plans = list(reading_plans_collection.find())
+    print(plans)
+    return render_template('reading_plan.html', plans=plans)
+
+@app.route('/delete_reading_plan/<plan_id>', methods=['POST'])
+def delete_reading_plan(plan_id):
+    result = reading_plans_collection.delete_one({'_id': ObjectId(plan_id)})
+    if result.deleted_count > 0:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False}), 400
+    
+@app.route('/add_reading_plan', methods=['GET', 'POST'])
+def add_reading_plan():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        due_date = request.form.get('due_date')
+        selected_books = request.form.getlist('books')
+
+        reading_plan = {
+            'name': name,
+            'due_date': due_date,
+            'books': [{'book_id': book_id, 'read': False} for book_id in selected_books]
+        }
+        reading_plans_collection.insert_one(reading_plan)
+        return redirect(url_for('reading_plans'))
+    
+    books = list(books_collection.find())
+    return render_template('add_plan.html', books=books)
+
+@app.route('/update_reading_plan/<plan_id>', methods=['POST'])
+def update_reading_plan(plan_id):
+    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id)})
+    if not plan:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    book_id = request.form.get('book_id')
+    for book in plan['books']:
+        if book['book_id'] == book_id:
+            book['read'] = not book['read']
+    
+    reading_plans_collection.update_one({'_id': ObjectId(plan_id)}, {'$set': {'books': plan['books']}})
+    return jsonify({'success': True})
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -102,4 +198,3 @@ def logout():
     return redirect(url_for('home'))
 if __name__ == '__main__':
     app.run()
-
