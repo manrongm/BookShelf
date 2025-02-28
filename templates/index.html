@@ -38,18 +38,42 @@
                 });
             }
         }
+
+        function searchBooks() {
+            const query = document.getElementById("search-input").value;
+            fetch(`/search_books?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const bookGrid = document.getElementById("book-grid");
+                    bookGrid.innerHTML = "";
+                    data.forEach(book => {
+                        const bookCard = document.createElement("div");
+                        bookCard.className = "book-card";
+                        bookCard.innerHTML = `
+                            <h3 class="book-title" onclick="showBookDetails('${book.title}', '${book.author}', '${book.genre}', '${book.year}', '${book.rating}', '${book.review}')">
+                                ${book.title}
+                            </h3>
+                            <div class="edit-button-container">
+                                <a href="/edit_book/${book._id}" class="btn btn-success btn-edit">Edit</a>
+                                <button class="btn btn-danger btn-delete" onclick="deleteBook('${book._id}', event)">Delete</button>
+                            </div>
+                        `;
+                        bookGrid.appendChild(bookCard);
+                    });
+                });
+        }
     </script>
 </head>
 <body>
     <div class="container">
         <h1 class="main-title">My Book Collection</h1>
 
-        <form action="search.html" method="get" class="search-bar">
-            <input type="text" name="query" placeholder="Search by title, author, or genre" class="search-input">
-            <button type="submit" class="btn search-btn">Search</button>
-        </form>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search by title, author, or genre" class="search-input">
+            <button type="button" class="btn search-btn" onclick="searchBooks()">Search</button>
+        </div>
 
-        <div class="book-grid">
+        <div class="book-grid" id="book-grid">
             {% for book in books %}
             <div class="book-card">
                 <h3 class="book-title" onclick="showBookDetails('{{ book.title }}', '{{ book.author }}', '{{ book.genre }}', '{{ book.year }}', '{{ book.rating }}', '{{ book.review }}')">
@@ -69,7 +93,6 @@
         <div class="button-container">
             <a href="{{ url_for('add_book') }}" class="btn btn-success">Add New Book</a>
             <a href="{{ url_for('reading_plans') }}" class="btn btn-success">Reading Plans</a>
-
         </div>
     </div>
 
