@@ -257,5 +257,27 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+@app.route('/search_books', methods=['GET'])
+def search_books():
+    query = request.args.get('query', '').strip()
+    if query:
+        books = list(books_collection.find({
+            '$or': [
+                {'title': {'$regex': query, '$options': 'i'}},
+            ]
+        }))
+    else:
+        books = list(books_collection.find())
+    return jsonify([{
+        '_id': str(book['_id']),
+        'title': book['title'],
+        'author': book['author'],
+        'genre': book['genre'],
+        'year': book['year'],
+        'rating': book['rating'],
+        'review': book['review']
+    } for book in books])
+
 if __name__ == '__main__':
     app.run()
