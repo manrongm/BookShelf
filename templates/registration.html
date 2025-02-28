@@ -4,18 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Link to External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Register Page</h1>
+    <div class="container">
+        <h1 class="main-title">Register</h1>
 
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        {{ form.name }}
-        {{ form.username }}
-        {{ form.password }}
-        {{ form.submit }}
-    </form>
+        <form method="POST" action="" class="book-form">
+            {{ form.hidden_tag() }}
 
-    <a href="{{ url_for('login') }}">Login</a>
+            <div class="form-group">
+                {{ form.name.label }}
+                {{ form.name(class="form-control") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username(class="form-control") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="form-control") }}
+            </div>
+
+            <button type="submit" class="btn btn-success">Register</button>
+        </form>
+
+        <div class="button-container">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+        </div>
+    </div>
 </body>
 </html>
