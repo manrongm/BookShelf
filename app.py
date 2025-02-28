@@ -74,7 +74,6 @@ def add_book():
         rating = request.form.get('rating')
         review = request.form.get('review')
 
-        # Insert book data into MongoDB
         book_data = {
             'title': title,
             'author': author,
@@ -91,6 +90,14 @@ def add_book():
 
     return render_template('add_book.html')
 
+@app.route('/delete_book/<book_id>', methods=['POST'])
+def delete_book(book_id):
+    result = books_collection.delete_one({'_id': ObjectId(book_id)})
+    if result.deleted_count > 0:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False}), 400
+    
 @app.route('/edit_book/<book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
     book = books_collection.find_one({'_id': ObjectId(book_id)})
@@ -113,8 +120,27 @@ def edit_book(book_id):
 @app.route('/reading_plans')
 def reading_plans():
     plans = list(reading_plans_collection.find())
-    print(plans)
+
+    for plan in plans:
+        book_details = []
+        books_read = 0
+        for book in plan['books']:
+            book_info = books_collection.find_one({'_id': ObjectId(book['book_id'])})
+            if book_info:
+                book_details.append({
+                    'book_id': book['book_id'],
+                    'title': book_info['title'],
+                    'read': book['read']
+                })
+                if book['read']:
+                    books_read += 1 
+        
+        plan['books'] = book_details
+        plan['books_read'] = books_read
+        plan['total_books'] = len(book_details)
+
     return render_template('reading_plan.html', plans=plans)
+
 
 @app.route('/delete_reading_plan/<plan_id>', methods=['POST'])
 def delete_reading_plan(plan_id):
@@ -149,12 +175,47 @@ def update_reading_plan(plan_id):
         return jsonify({'error': 'Plan not found'}), 404
 
     book_id = request.form.get('book_id')
+
+    updated_books = []
     for book in plan['books']:
         if book['book_id'] == book_id:
-            book['read'] = not book['read']
-    
-    reading_plans_collection.update_one({'_id': ObjectId(plan_id)}, {'$set': {'books': plan['books']}})
-    return jsonify({'success': True})
+            book['read'] = not book.get('read', False)  # Toggle read status
+        updated_books.append(book)
+
+    reading_plans_collection.update_one(
+        {'_id': ObjectId(plan_id)}, 
+        {'$set': {'books': updated_books}}
+    )
+
+    return jsonify({'success': True, 'updated_books': updated_books})
+
+@app.route('/get_reading_plan/<plan_id>', methods=['GET'])
+def get_reading_plan(plan_id):
+    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id)})
+
+    if not plan:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    book_details = []
+    books_read = 0
+    for book in plan['books']:
+        book_info = books_collection.find_one({'_id': ObjectId(book['book_id'])})
+        if book_info:
+            book_details.append({
+                'book_id': book['book_id'],
+                'title': book_info['title'],
+                'read': book['read']
+            })
+            if book['read']:
+                books_read += 1
+
+    return jsonify({
+        'name': plan['name'],
+        'books': book_details,
+        'books_read': books_read,
+        'total_books': len(book_details)
+    })
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
