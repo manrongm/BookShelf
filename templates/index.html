@@ -72,19 +72,20 @@
             <input type="text" id="search-input" placeholder="Search by title, author, or genre" class="search-input">
             <button type="button" class="btn search-btn" onclick="searchBooks()">Search</button>
         </div>
-
-        <div class="book-grid" id="book-grid">
-            {% for book in books %}
-            <div class="book-card">
-                <h3 class="book-title" onclick="showBookDetails('{{ book.title }}', '{{ book.author }}', '{{ book.genre }}', '{{ book.year }}', '{{ book.rating }}', '{{ book.review }}')">
-                    {{ book.title }}
-                </h3>
-                <div class="edit-button-container">
-                    <a href="{{ url_for('edit_book', book_id=book['_id']) }}" class="btn btn-success btn-edit">Edit</a>
-                    <button class="btn btn-danger btn-delete" onclick="deleteBook('{{ book._id }}', event)">Delete</button>
+        <div class="scrollable-container">
+            <div class="book-grid" id="book-grid">
+                {% for book in books %}
+                <div class="book-card">
+                    <h3 class="book-title" onclick="showBookDetails('{{ book.title }}', '{{ book.author }}', '{{ book.genre }}', '{{ book.year }}', '{{ book.rating }}', '{{ book.review }}')">
+                        {{ book.title }}
+                    </h3>
+                    <div class="edit-button-container">
+                        <a href="{{ url_for('edit_book', book_id=book['_id']) }}" class="btn btn-success btn-edit">Edit</a>
+                        <button class="btn btn-danger btn-delete" onclick="deleteBook('{{ book._id }}', event)">Delete</button>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
         {% if books|length == 0 %}
             <p class="empty-message">No books in your collection yet. Add some now!</p>
