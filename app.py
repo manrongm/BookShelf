@@ -66,7 +66,6 @@ def home():
 @app.route('/add_book', methods=['GET', 'POST'])
 def add_book():
     if request.method == 'POST':
-        # Retrieve form data
         title = request.form.get('title')
         author = request.form.get('author')
         genre = request.form.get('genre')
@@ -179,7 +178,7 @@ def update_reading_plan(plan_id):
     updated_books = []
     for book in plan['books']:
         if book['book_id'] == book_id:
-            book['read'] = not book.get('read', False)  # Toggle read status
+            book['read'] = not book.get('read', False)
         updated_books.append(book)
 
     reading_plans_collection.update_one(
@@ -234,7 +233,8 @@ def register():
         db.User.insert_one(user)
         return redirect(url_for('home'))
     return render_template('registration.html', form=form)
-#24:38
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
