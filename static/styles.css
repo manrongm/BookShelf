@@ -34,7 +34,6 @@ body {
     font-size: 1.5rem;
 }
 
-/* Form Styles */
 .book-form {
     background: #f7f7f7;
     padding: 20px;
@@ -91,7 +90,8 @@ textarea.form-control {
     align-items: center;
     gap: 10px;
 }
-/* Buttons */
+
+
 .btn {
     display: inline-block;
     width: 100%;
@@ -120,12 +120,12 @@ textarea.form-control {
     justify-content: center;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    max-width: 100%; /* Ensures it doesn't overflow */
+    max-width: 100%;
 }
 
 .search-input {
     width: 70%;
-    max-width: 350px; /* Reduced width to fit inside the container */
+    max-width: 350px;
     padding: 12px;
     border: 2px solid #007bff;
     border-radius: 8px 0 0 8px;
@@ -174,7 +174,7 @@ textarea.form-control {
 
 .book-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjusted min width */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
     justify-content: center;
     max-width: 100%; 
@@ -203,16 +203,16 @@ textarea.form-control {
     font-weight: 700;
 }
 
-/* Modal Styles */
+
 .modal {
-    display: none; /* Hidden by default */
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%); /* Center the modal */
+    transform: translate(-50%, -50%);
     width: 80%;
-    max-width: 400px; /* Adjust size */
+    max-width: 400px;
     background-color: white;
     padding: 20px;
     border-radius: 12px;
@@ -280,7 +280,6 @@ textarea.form-control {
     transform: translateY(-3px);
 }
 
-/* Progress Bar */
 .progress-container {
     width: 100%;
     background: #f3f3f3;
