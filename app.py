@@ -8,6 +8,7 @@ from flask_login import UserMixin, LoginManager, login_user, login_required, log
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
+from flask_login import login_required
 
 app = Flask(__name__)
 
@@ -57,11 +58,31 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
     submit = SubmitField('Login')
 
-@app.route('/')
+# @app.route('/')
+# def home():
+#     books = list(books_collection.find())
+#     print(books)
+#     return render_template('index.html', books = books)
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    books = list(books_collection.find())
-    print(books)
-    return render_template('index.html', books = books)
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = db.User.find_one({'username': form.username.data})
+
+        if user and Bcrypt().check_password_hash(user['password'], form.password.data):
+            login_user(User(user))
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'danger')
+
+    return render_template('login.html', form=form)
+
+@app.route('/index')
+@login_required
+def index():
+    books = list(books_collection.find({'user_id': ObjectId(current_user.id)}))
+    return render_template('index.html', books=books)
 
 @app.route('/add_book', methods=['GET', 'POST'])
 def add_book():
@@ -79,18 +100,22 @@ def add_book():
             'genre': genre,
             'year': year,
             'rating': rating,
-            'review': review
+            'review': review,
+            'user_id': ObjectId(current_user.id)
         }
-
+        print(current_user)
         books_collection.insert_one(book_data)
         flash('Book added successfully!', 'success')
 
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
 
     return render_template('add_book.html')
 
 @app.route('/delete_book/<book_id>', methods=['POST'])
 def delete_book(book_id):
+    book = books_collection.find_one({'_id': ObjectId(book_id), 'user_id': ObjectId(current_user.id)})
+    if not book:
+        return jsonify({'error': 'Unauthorized or book not found'}), 403
     result = books_collection.delete_one({'_id': ObjectId(book_id)})
     if result.deleted_count > 0:
         return jsonify({'success': True})
@@ -98,9 +123,12 @@ def delete_book(book_id):
         return jsonify({'success': False}), 400
     
 @app.route('/edit_book/<book_id>', methods=['GET', 'POST'])
+@login_required
 def edit_book(book_id):
-    book = books_collection.find_one({'_id': ObjectId(book_id)})
-    
+    book = books_collection.find_one({'_id': ObjectId(book_id), 'user_id': ObjectId(current_user.id)})
+    if not book:
+        flash("Unauthorized access or book not found", "danger")
+        return redirect(url_for('index'))
     if request.method == 'POST':
         updated_data = {
             'title': request.form.get('title'),
@@ -110,21 +138,22 @@ def edit_book(book_id):
             'rating': request.form.get('rating'),
             'review': request.form.get('review')
         }
-        books_collection.update_one({'_id': ObjectId(book_id)}, {'$set': updated_data})
+        books_collection.update_one({'_id': ObjectId(book_id), 'user_id': ObjectId(current_user.id)}, {'$set': updated_data})
         flash('Book updated successfully!', 'success')
-        return redirect(url_for('home'))
-    
+        return redirect(url_for('index'))
+
     return render_template('edit_book.html', book=book)
 
 @app.route('/reading_plans')
+@login_required
 def reading_plans():
-    plans = list(reading_plans_collection.find())
+    plans = list(reading_plans_collection.find({'user_id': ObjectId(current_user.id)}))
 
     for plan in plans:
         book_details = []
         books_read = 0
         for book in plan['books']:
-            book_info = books_collection.find_one({'_id': ObjectId(book['book_id'])})
+            book_info = books_collection.find_one({'_id': ObjectId(book['book_id']), 'user_id': ObjectId(current_user.id)})
             if book_info:
                 book_details.append({
                     'book_id': book['book_id'],
@@ -142,14 +171,20 @@ def reading_plans():
 
 
 @app.route('/delete_reading_plan/<plan_id>', methods=['POST'])
+@login_required
 def delete_reading_plan(plan_id):
-    result = reading_plans_collection.delete_one({'_id': ObjectId(plan_id)})
+    result = reading_plans_collection.delete_one({
+        '_id': ObjectId(plan_id), 
+        'user_id': ObjectId(current_user.id) 
+    })
+
     if result.deleted_count > 0:
         return jsonify({'success': True})
     else:
-        return jsonify({'success': False}), 400
-    
+        return jsonify({'success': False, 'message': 'Unauthorized or Plan Not Found'}), 403  # Return 403 Forbidden
+
 @app.route('/add_reading_plan', methods=['GET', 'POST'])
+@login_required
 def add_reading_plan():
     if request.method == 'POST':
         name = request.form.get('name')
@@ -157,21 +192,25 @@ def add_reading_plan():
         selected_books = request.form.getlist('books')
 
         reading_plan = {
+            'user_id': ObjectId(current_user.id),
             'name': name,
             'due_date': due_date,
             'books': [{'book_id': book_id, 'read': False} for book_id in selected_books]
         }
         reading_plans_collection.insert_one(reading_plan)
         return redirect(url_for('reading_plans'))
-    
-    books = list(books_collection.find())
+
+    books = list(books_collection.find({'user_id': ObjectId(current_user.id)}))
     return render_template('add_plan.html', books=books)
 
+
 @app.route('/update_reading_plan/<plan_id>', methods=['POST'])
+@login_required 
 def update_reading_plan(plan_id):
-    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id)})
+    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id), 'user_id': ObjectId(current_user.id)})
+    
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({'error': 'Plan not found or unauthorized access'}), 404
 
     book_id = request.form.get('book_id')
 
@@ -182,18 +221,20 @@ def update_reading_plan(plan_id):
         updated_books.append(book)
 
     reading_plans_collection.update_one(
-        {'_id': ObjectId(plan_id)}, 
+        {'_id': ObjectId(plan_id), 'user_id': ObjectId(current_user.id)},
         {'$set': {'books': updated_books}}
     )
-
     return jsonify({'success': True, 'updated_books': updated_books})
 
+
 @app.route('/get_reading_plan/<plan_id>', methods=['GET'])
+@login_required
 def get_reading_plan(plan_id):
-    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id)})
+    # Ensure the reading plan belongs to the current user
+    plan = reading_plans_collection.find_one({'_id': ObjectId(plan_id), 'user_id': ObjectId(current_user.id)})
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({'error': 'Plan not found or unauthorized access'}), 404
 
     book_details = []
     books_read = 0
@@ -246,7 +287,7 @@ def login():
         
         if user and Bcrypt().check_password_hash(user['password'], form.password.data):
             login_user(User(user))
-            return redirect(url_for('home'))
+            return redirect(url_for('index'))
         else:
             flash('Invalid username or password', 'danger')
 
@@ -259,16 +300,16 @@ def logout():
     return redirect(url_for('home'))
 
 @app.route('/search_books', methods=['GET'])
+@login_required 
 def search_books():
     query = request.args.get('query', '').strip()
+    search_filter = {'user_id': ObjectId(current_user.id)}
+    
     if query:
-        books = list(books_collection.find({
-            '$or': [
-                {'title': {'$regex': query, '$options': 'i'}},
-            ]
-        }))
-    else:
-        books = list(books_collection.find())
+        search_filter['$or'] = [{'title': {'$regex': query, '$options': 'i'}}]
+
+    books = list(books_collection.find(search_filter))
+
     return jsonify([{
         '_id': str(book['_id']),
         'title': book['title'],
