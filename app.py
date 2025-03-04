@@ -85,6 +85,7 @@ def index():
     return render_template('index.html', books=books)
 
 @app.route('/add_book', methods=['GET', 'POST'])
+@login_required
 def add_book():
     if request.method == 'POST':
         title = request.form.get('title')
@@ -112,6 +113,7 @@ def add_book():
     return render_template('add_book.html')
 
 @app.route('/delete_book/<book_id>', methods=['POST'])
+@login_required
 def delete_book(book_id):
     book = books_collection.find_one({'_id': ObjectId(book_id), 'user_id': ObjectId(current_user.id)})
     if not book:
@@ -278,20 +280,7 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
-
-    if form.validate_on_submit():
-        user = db.User.find_one({
-            'username': form.username.data
-        })
-        
-        if user and Bcrypt().check_password_hash(user['password'], form.password.data):
-            login_user(User(user))
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid username or password', 'danger')
-
-    return render_template('login.html', form=form)
+    return redirect(url_for('home'))
 
 @app.route('/logout')
 @login_required
