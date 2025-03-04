@@ -7,7 +7,7 @@ Our web application empowers users to efficiently manage and track their book co
 - Xiaowei Ma [GitHub](https://github.com/WillliamMa)
 - Rishi Rana [GitHub](https://github.com/Rishi-Rana1)
 - Weite Li [Github](https://github.com/YYukin0)
-- Rishi Rana [GitHub](https://github.com/Rishi-Rana1)
+- Mandy Mao [GitHub](https://github.com/manrongm)
 
 ## Product Vision Statement
 
