@@ -303,10 +303,14 @@ def logout():
 @login_required 
 def search_books():
     query = request.args.get('query', '').strip()
-    search_filter = {'user_id': ObjectId(current_user.id)}
-    
-    if query:
-        search_filter['$or'] = [{'title': {'$regex': query, '$options': 'i'}}]
+    search_filter = {
+        'user_id': ObjectId(current_user.id),
+        '$or': [
+            {'title': {'$regex': query, '$options': 'i'}},
+            {'author': {'$regex': query, '$options': 'i'}},
+            {'genre': {'$regex': query, '$options': 'i'}}
+        ]
+    }
 
     books = list(books_collection.find(search_filter))
 
@@ -319,6 +323,7 @@ def search_books():
         'rating': book['rating'],
         'review': book['review']
     } for book in books])
+
 
 if __name__ == '__main__':
     app.run()
