@@ -1,17 +1,24 @@
-# Web Application Exercise
+# BookShelf (Web Application)
 
 Our web application empowers users to efficiently manage and track their book collections and reading plans through an intuitive and personalized platform, enhancing their reading experience.
-
-## Team members
-
-- Xiaowei Ma [GitHub](https://github.com/WillliamMa)
-- Rishi Rana [GitHub](https://github.com/Rishi-Rana1)
-- Weite Li [Github](https://github.com/YYukin0)
-- Mandy Mao [GitHub](https://github.com/manrongm)
 
 ## Product Vision Statement
 
 "Our web application empowers users to efficiently manage and track their book collections and reading plans through an intuitive and personalized platform, enhancing their reading experience."
+
+## How Our Project Works
+
+Our platform offers an all-in-one solution for book lovers to organize and track their reading habits. Users can create personal book collections, set reading goals, and monitor their progress in an interactive and seamless manner. The application provides key features such as adding and editing book details, deleting unwanted books and plans, and filtering collections through a keyword-based search. 
+
+The system is built with Flask and MongoDB, ensuring a smooth user experience with secure authentication. Users can log in to their accounts to access their customized reading data, manage their collections, and update their reading plans. The dashboard presents an intuitive layout where users can navigate through their book lists, view summaries, and track progress toward their reading goals. 
+
+Key functionalities include:
+- Secure user authentication to access personal book collections.
+- Ability to add, edit, and remove books with relevant details (title, author, rating, reviews, etc.).
+- Setting up and tracking personalized reading plans.
+- Viewing book details and notes in an easy-to-navigate dashboard.
+- Searching for books within the collection using keywords.
+- Monitoring progress toward reading goals with visual indicators.
 
 ## User Stories
 
@@ -27,27 +34,36 @@ Our web application empowers users to efficiently manage and track their book co
 - As a user, I want to add new books with titles, authors, genres, and ratings so that I can track my reading progress.
 
 Also available in the [issues page](https://github.com/software-students-spring2025/2-web-app-membersonly/issues)
+
 ## Steps Necessary to Run the Software
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/software-students-spring2025/2-web-app-membersonly.git
    cd 2-web-app-membersonly
+   ```
 2. **Install dependencies**
    ```bash
    pip install flask flask-wtf flask-login flask-bcrypt pymongo python-dotenv
+   ```
 3. **Set up .env file**
     ```bash
     SECRET_KEY= 000
     MONGO=mongodb+srv://FlaskProject2:FlaskProjectPass@bookreview.08j3l.mongodb.net/?retryWrites=true&w=majority&appName=BookReview
+    ```
 4. **Start the Flask application**
    ```bash
    python app.py
+   ```
 5. **Access the application**
-Open your web browser and navigate to: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+   Open your web browser and navigate to: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
+## Task Boards
 
-## Task boards
-https://github.com/software-students-spring2025/2-web-app-membersonly/issues
-Sprint 1:  [Sprint 1 Task Board](https://github.com/orgs/software-students-spring2025/projects/54/views/2)
-Spring 2:  [Sprint 2 Task Board](https://github.com/orgs/software-students-spring2025/projects/54/views/3)
+Stay updated on our progress through our task boards and issue tracking:
+
+- [Issues Page](https://github.com/software-students-spring2025/2-web-app-membersonly/issues)
+- **Sprint 1:** [Sprint 1 Task Board](https://github.com/orgs/software-students-spring2025/projects/54/views/2)
+- **Sprint 2:** [Sprint 2 Task Board](https://github.com/orgs/software-students-spring2025/projects/54/views/3)
+
+These boards help us track development progress, feature implementation, and bug fixes while ensuring we meet our goals efficiently.
